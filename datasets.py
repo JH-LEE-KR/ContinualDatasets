@@ -13,7 +13,6 @@ import torch
 from torch.utils.data.dataset import Subset
 from torchvision import datasets, transforms
 
-from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from timm.data import create_transform
 
 from continual_datasets.continual_datasets import *
@@ -33,10 +32,10 @@ def build_continual_dataloader(args):
     dataloader = list()
     class_mask = list() if args.task_inc or args.train_mask else None
 
-    if args.dataset.startswith('Split-'):
-        transform_train = build_transform(args.dataset.replace('Split-',''), True, args)
-        transform_val = build_transform(args.dataset.replace('Split-',''), False, args)
+    transform_train = build_transform(True, args)
+    transform_val = build_transform(False, args)
 
+    if args.dataset.startswith('Split-'):
         dataset_train, dataset_val = get_dataset(args.dataset.replace('Split-',''), transform_train, transform_val, args)
 
         args.nb_classes = len(dataset_val.classes)
@@ -59,11 +58,6 @@ def build_continual_dataloader(args):
             dataset_train, dataset_val = splited_dataset[i]
 
         else:
-            dataset_name = dataset_list[i]
-
-            transform_train = build_transform(dataset_name, True, args)
-            transform_val = build_transform(dataset_name, False, args)
-
             dataset_train, dataset_val = get_dataset(dataset_list[i], transform_train, transform_val, args)
 
             transform_target = Lambda(target_transform, args.nb_classes)
@@ -138,6 +132,10 @@ def get_dataset(dataset, transform_train, transform_val, args,):
     elif dataset == 'TinyImagenet':
         dataset_train = TinyImagenet(args.data_path, train=True, download=True, transform=transform_train).data
         dataset_val = TinyImagenet(args.data_path, train=False, download=True, transform=transform_val).data
+        
+    elif dataset == 'Imagenet-R':
+        dataset_train = Imagenet_R(args.data_path, train=True, download=True, transform=transform_train).data
+        dataset_val = Imagenet_R(args.data_path, train=False, download=True, transform=transform_val).data
     
     else:
         raise ValueError('Dataset {} not found.'.format(dataset))
@@ -149,7 +147,7 @@ def split_single_dataset(dataset_train, dataset_val, args):
     assert nb_classes % args.num_tasks == 0
     classes_per_task = nb_classes // args.num_tasks
 
-    labels = [i for i in range(nb_classes)] # for CIFAR-100 
+    labels = [i for i in range(nb_classes)]
     
     split_datasets = list()
     mask = list()
@@ -180,51 +178,16 @@ def split_single_dataset(dataset_train, dataset_val, args):
     
     return split_datasets, mask
 
-mean_datasets = {
-    'CIFAR10': [x/255 for x in [125.3,123.0,113.9]],
-    'NotMNIST': (0.4254,),
-    'MNIST': (0.1,) ,
-    'SVHN':[0.4377,0.4438,0.4728] ,
-    'FashionMNIST': (0.2190,),
-
-}
-std_datasets = {
-    'CIFAR10': [x/255 for x in [63.0,62.1,66.7]],
-    'NotMNIST': (0.4501,),
-    'MNIST': (0.2752,),
-    'SVHN': [0.198,0.201,0.197],
-    'FashionMNIST': (0.3318,)
-}
-
-def build_transform(dataset_name, is_train, args):
-    if dataset_name in ['CIFAR10', 'MNIST', 'FashionMNIST', 'SVHN', 'NotMNIST']:
-        mean = mean_datasets[dataset_name]
-        std = std_datasets[dataset_name]
-    else:
-        mean = IMAGENET_DEFAULT_MEAN
-        std = IMAGENET_DEFAULT_STD
-    
+def build_transform(is_train, args):
     resize_im = args.input_size > 32
     if is_train:
-        # this should always dispatch to transforms_imagenet_train
-        transform = create_transform(
-            input_size=args.input_size,
-            is_training=True,
-            color_jitter=args.color_jitter,
-            auto_augment=args.aa,
-            interpolation=args.train_interpolation,
-            re_prob=args.reprob,
-            re_mode=args.remode,
-            re_count=args.recount,
-            mean=mean,
-            std=std,
-        )
-        if not resize_im:
-            # replace RandomResizedCropAndInterpolation with
-            # RandomCrop
-            transform.transforms[0] = transforms.RandomCrop(
-                args.input_size, padding=4)
-        
+        scale = (0.08, 1.0)
+        ratio = (3. / 4., 4. / 3.)
+        transform = transforms.Compose([
+            transforms.RandomResizedCrop(args.input_size, scale=scale, ratio=ratio),
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.ToTensor(),
+        ])
         return transform
 
     t = []
@@ -235,6 +198,5 @@ def build_transform(dataset_name, is_train, args):
         )
         t.append(transforms.CenterCrop(args.input_size))
     t.append(transforms.ToTensor())
-    t.append(transforms.Normalize(mean, std))
     
     return transforms.Compose(t)
