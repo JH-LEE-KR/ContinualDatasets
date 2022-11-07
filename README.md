@@ -46,44 +46,44 @@ pip install -r requirements.txt
 ## Training
 It can be used in various scenarios by changing `--dataset` and `--num_tasks` as shown below:
 
-Split-CIFAR100 with 10 tasks
+**Split-CIFAR100 with 10 tasks**
 ```
 python main.py --dataset Split-CIFAR100 --num_tasks 10
 ```
 
 
-Split-Imagenet-R with 10 tasks
+**Split-Imagenet-R with 10 tasks**
 ```
 python main.py --dataset Split-Imagenet-R --num_tasks 10
 ```
 
 
-5 datasets, 5 tasks with MNIST, Fashion-MNIST, NotMNIST, CIFAR10, SVHN,
+**5 datasets, 5 tasks with MNIST, Fashion-MNIST, NotMNIST, CIFAR10, SVHN**
 ```
 python main.py --dataset 5-datasets --num_tasks 5
 ```
 
 
-Sequence of datasets (CUB200,TinyImagenet,Scene67,Cars196,Flower102) with 5 tasks
+**Sequence of datasets (CUB200,TinyImagenet,Scene67,Cars196,Flower102) with 5 tasks**
 ```
 python main.py --dataset CUB200,TinyImagenet,Scene67,Cars196,Flower102 --num_tasks 5
 ```
 
 
 You can customize scenario, as below:
-Split-TinyImagenet with 10 tasks
+**Split-TinyImagenet with 10 tasks**
 ```
 python main.py --dataset Split-TinyImagenet --num_tasks 10
 ```
 
 
-Split-CUB200 with 10 tasks.
+**Split-CUB200 with 10 tasks**
 ```
 python main.py --dataset Split-CUB200 --num_tasks 10
 ```
 
 
-Sequence of datasets (CIFAR100,CUB200,TinyImagenet,Scene67,Cars196,Flower102,Imagenet-R) with 7 tasks.
+**Sequence of datasets (CIFAR100,CUB200,TinyImagenet,Scene67,Cars196,Flower102,Imagenet-R) with 7 tasks**
 ```
 python main.py --dataset IFAR100,CUB200,TinyImagenet,Scene67,Cars196,Flower102,Imagenet-R --num_tasks 7
 ```
