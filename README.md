@@ -28,7 +28,7 @@ The available datasets are as follows:
 ## Usage
 First, clone the repository locally:
 ```
-git clone https://github.com/Lee-JH-KR/Continual-datasets.git
+git clone https://github.com/JH-LEE-KR/Continual-datasets.git
 cd Continual-datasets
 ```
 Then, install the packages below:
