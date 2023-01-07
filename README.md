@@ -23,6 +23,7 @@ The available datasets are as follows:
 - Indoor Scene67
 - TinyImagenet
 - Imagenet-R
+- CORe50
 
 ## Usage
 First, clone the repository locally:
