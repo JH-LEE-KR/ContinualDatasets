@@ -92,6 +92,7 @@ def get_args_parser():
     parser.add_argument('--num_tasks', default=10, type=int, help='number of sequential tasks')
     parser.add_argument('--train_mask', default=True, type=bool, help='if using the class mask at training')
     parser.add_argument('--task_inc', default=False, type=bool, help='if doing task incremental')
+    parser.add_argument('--domain_inc', action='store_true', default=False, help='if doing domain incremental')
 
     # Misc parameters
     parser.add_argument('--print_freq', type=int, default=10, help = 'The frequency of printing')

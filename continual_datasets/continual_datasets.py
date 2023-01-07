@@ -704,3 +704,70 @@ class Imagenet_R(torch.utils.data.Dataset):
         for c in self.dataset.classes:
             path = os.path.join(self.fpath, c)
             rmtree(path)
+
+class CORe50(torch.utils.data.Dataset):
+    def __init__(self, root, train=True, transform=None, target_transform=None, download=False):        
+        self.root = os.path.expanduser(root)
+        self.transform = transform
+        self.target_transform=target_transform
+        self.train = train
+
+        self.url = 'http://bias.csr.unibo.it/maltoni/download/core50/core50_128x128.zip'
+        self.filename = 'core50_128x128.zip'
+
+        self.fpath = os.path.join(root, 'core50_128x128')
+        if not os.path.isfile(self.fpath):
+            if not download:
+               raise RuntimeError('Dataset not found. You can use download=True to download it')
+            else:
+                print('Downloading from '+self.url)
+                download_url(self.url, root, filename=self.filename)
+
+        if not os.path.exists(os.path.join(root, 'core50_128x128')):
+            import zipfile
+            zip_ref = zipfile.ZipFile(os.path.join(self.root, self.filename), 'r')
+            zip_ref.extractall(root)
+            zip_ref.close()
+            
+        self.train_session_list = ['s1', 's2', 's4', 's5', 's6', 's8', 's9', 's11']
+        self.test_session_list = ['s3', 's7', 's10']
+        self.label = [f'o{i}' for i in range(1, 51)]
+        
+        if not os.path.exists(self.fpath + '/train') and not os.path.exists(self.fpath + '/test'):
+            self.split()
+        
+        if self.train:
+            fpath = self.fpath + '/train'
+            self.data = [datasets.ImageFolder(f'{fpath}/{s}', transform=transform) for s in self.train_session_list]
+        else:
+            fpath = self.fpath + '/test'
+            self.data = datasets.ImageFolder(fpath, transform=transform)
+
+    def split(self):
+        train_folder = self.fpath + '/train'
+        test_folder = self.fpath + '/test'
+
+        if os.path.exists(train_folder):
+            rmtree(train_folder)
+        if os.path.exists(test_folder):
+            rmtree(test_folder)
+        os.mkdir(train_folder)
+        os.mkdir(test_folder)
+
+        for s in self.train_session_list:
+            src = os.path.join(self.fpath, s)
+            if os.path.exists(os.path.join(train_folder, s)):
+                continue
+            move(src, train_folder)
+        
+        for s in self.test_session_list:
+            for l in self.label:
+                dst = os.path.join(test_folder, l)
+                if not os.path.exists(dst):
+                    os.mkdir(os.path.join(test_folder, l))
+                
+                f = glob.glob(os.path.join(self.fpath, s, l, '*.png'))
+
+                for src in f:
+                    move(src, dst)
+            rmtree(os.path.join(self.fpath, s))
