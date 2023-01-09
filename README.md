@@ -11,6 +11,7 @@ The system I used and tested in
 
 ## Datasets
 The available datasets are as follows:
+### Task & Class Incremental
 - CIFAR-100
 - CIFAR-10
 - MNIST
@@ -23,6 +24,7 @@ The available datasets are as follows:
 - Indoor Scene67
 - TinyImagenet
 - Imagenet-R
+### Domain Incremental
 - CORe50
 - DomainNet
 
@@ -46,7 +48,7 @@ pip install -r requirements.txt
 ```
 
 ## Training
-It can be used in various scenarios by changing `--dataset` and `--num_tasks` as shown below:
+It can be used in various scenarios by changing `--dataset` and `--num_tasks` as shown below (default: class incremental):
 
 **Split-CIFAR100 with 10 tasks**
 ```
@@ -93,14 +95,21 @@ python main.py --dataset IFAR100,CUB200,TinyImagenet,Scene67,Cars196,Flower102,I
 
 **Domain Incremental CORe50 with 7 tasks**
 ```
-python main.py --dataset CORe50 --num_tasks 7 --domain_inc
+python main.py --dataset CORe50 --num_tasks 7 --domain_inc --no_train_mask
 ```
 
 
 **Domain Incremental DomainNet with 6 tasks**
 ```
-python main.py --dataset DomainNet --num_tasks 6 --domain_inc
+python main.py --dataset DomainNet --num_tasks 6 --domain_inc --no_train_mask
 ```
 
+**Options**
+```
+--train_mask, if using the class mask at training.
+--no_train_mask, if domain incremental setting, not using the class mask at training.
+--task_inc, if doing task incremental.
+--domain_inc, if doing domain incremental.
+```
 
-Also available in Slurm by changing options on `train.sh`
+Also available in <a href="https://slurm.schedmd.com/documentation.html">Slurm</a> by changing options on `train.sh`
