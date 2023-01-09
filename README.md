@@ -110,6 +110,7 @@ python main.py --dataset DomainNet --num_tasks 6 --domain_inc --no_train_mask
 --no_train_mask, if domain incremental setting, not using the class mask at training.
 --task_inc, if doing task incremental.
 --domain_inc, if doing domain incremental.
+--shuffle, shuffle the data order.
 ```
 
 Also available in <a href="https://slurm.schedmd.com/documentation.html">Slurm</a> by changing options on `train.sh`
