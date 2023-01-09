@@ -103,7 +103,7 @@ def get_args_parser():
 
 def main(args):
     device = torch.device(args.device)
-    import pdb; pdb.set_trace()
+
     # fix the seed for reproducibility
     seed = args.seed
     torch.manual_seed(seed)
