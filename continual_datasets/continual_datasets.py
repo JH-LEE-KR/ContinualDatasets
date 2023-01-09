@@ -140,10 +140,11 @@ class NotMNIST(MNIST_RGB):
                 print('Downloading from '+self.url)
                 download_url(self.url, root, filename=self.filename)
 
-        import zipfile
-        zip_ref = zipfile.ZipFile(fpath, 'r')
-        zip_ref.extractall(root)
-        zip_ref.close()
+        if not os.path.exists(os.path.join(root, 'notMNIST')):
+            import zipfile
+            zip_ref = zipfile.ZipFile(fpath, 'r')
+            zip_ref.extractall(root)
+            zip_ref.close()
 
         if self.train:
             fpath = os.path.join(root, 'notMNIST', 'Train')
@@ -771,3 +772,139 @@ class CORe50(torch.utils.data.Dataset):
                 for src in f:
                     move(src, dst)
             rmtree(os.path.join(self.fpath, s))
+
+class DomainNet(torch.utils.data.Dataset):
+    def __init__(self, root, train=True, transform=None, target_transform=None, download=False):
+        root = os.path.join(root, 'DomainNet')   
+        self.root = os.path.expanduser(root)
+        self.transform = transform
+        self.target_transform=target_transform
+        self.train = train
+
+        self.url = [
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/groundtruth/clipart.zip',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/infograph.zip',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/groundtruth/painting.zip',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/quickdraw.zip',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/real.zip',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/sketch.zip'
+        ]
+
+        self.filename = [
+            'clipart.zip',
+            'infograph.zip',
+            'painting.zip',
+            'quickdraw.zip',
+            'real.zip',
+            'sketch.zip'
+        ]
+
+        self.train_url_list = [
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/clipart_train.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/infograph_train.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/painting_train.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/quickdraw_train.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/real_train.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/sketch_train.txt'
+        ]
+
+        for u in self.train_url_list:
+            filename = u.split('/')[-1]
+            if not os.path.isfile(os.path.join(self.root, filename)):
+                if not download:
+                    raise RuntimeError('Dataset not found. You can use download=True to download it')
+                else:
+                    print('Downloading from '+filename)
+                    download_url(u, root, filename=filename)
+        
+        self.test_url_list = [
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/clipart_test.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/infograph_test.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/painting_test.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/quickdraw_test.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/real_test.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/sketch_test.txt'
+        ]
+
+        for u in self.test_url_list:
+            filename = u.split('/')[-1]
+            if not os.path.isfile(os.path.join(self.root, filename)):
+                if not download:
+                    raise RuntimeError('Dataset not found. You can use download=True to download it')
+                else:
+                    print('Downloading from '+filename)
+                    download_url(u, root, filename=filename)
+
+        self.fpath = [os.path.join(self.root, f) for f in self.filename]
+
+        for i in range(len(self.fpath)):
+            if not os.path.isfile(self.fpath[i]):
+                if not download:
+                    raise RuntimeError('Dataset not found. You can use download=True to download it')
+                else:
+                    print('Downloading from '+self.url[i])
+                    download_url(self.url[i], root, filename=self.filename[i])
+            
+        if not os.path.exists(self.root + '/train') and not os.path.exists(self.root + '/test'):
+            for i in range(len(self.fpath)):
+                if not os.path.exists(os.path.join(self.root, self.filename[i][:-4])):
+                    import zipfile
+                    zip_ref = zipfile.ZipFile(os.path.join(self.root, self.filename[i]), 'r')
+                    zip_ref.extractall(root)
+                    zip_ref.close()
+            
+            self.split()
+
+        if self.train:
+            fpath = self.root + '/train'
+            self.data = [datasets.ImageFolder(f'{fpath}/{d}', transform=transform) for d in os.listdir(fpath)]
+        else:
+            fpath = self.root + '/test'
+            self.data = datasets.ImageFolder(fpath, transform=transform)
+
+    def split(self):
+        train_folder = self.root + '/train'
+        test_folder = self.root + '/test'
+
+        if os.path.exists(train_folder):
+            rmtree(train_folder)
+        if os.path.exists(test_folder):
+            rmtree(test_folder)
+        os.mkdir(train_folder)
+        os.mkdir(test_folder)
+
+        for i in range(len(self.train_url_list)):
+            train_list = self.train_url_list[i].split('/')[-1]
+            
+            with open(os.path.join(self.root, train_list), 'r') as f:
+                for line in f.readlines():
+                    line = line.replace('\n', '')
+                    path, _ = line.split(' ')
+                    dst = '/'.join(path.split('/')[:2])
+                    
+                    if not os.path.exists(os.path.join(train_folder, dst)):
+                        os.makedirs(os.path.join(train_folder, dst))
+                    
+                    src = os.path.join(self.root, path)
+                    dst = os.path.join(train_folder, path)
+
+                    move(src, dst)
+        
+        for i in range(len(self.test_url_list)):
+            test_list = self.test_url_list[i].split('/')[-1]
+
+            with open(os.path.join(self.root, test_list), 'r') as f:
+                for line in f.readlines():
+                    line = line.replace('\n', '')
+                    path, _ = line.split(' ')
+                    dst = path.split('/')[1]
+
+                    if not os.path.exists(os.path.join(test_folder, dst)):
+                        os.makedirs(os.path.join(test_folder, dst))
+
+                    src = os.path.join(self.root, path)
+                    dst = '/'.join(path.split('/')[1:])
+                    dst = os.path.join(test_folder, dst)
+
+                    move(src, dst)
+            rmtree(os.path.join(self.root, test_list.split('_')[0]))

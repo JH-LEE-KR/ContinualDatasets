@@ -42,7 +42,7 @@ def build_continual_dataloader(args):
 
         splited_dataset, class_mask = split_single_dataset(dataset_train, dataset_val, args)
     
-    elif args.dataset == 'CORe50':
+    elif args.dataset in ['CORe50', 'DomainNet']:
         dataset_train, dataset_val = get_dataset(args.dataset, transform_train, transform_val, args)
 
         args.nb_classes = len(dataset_val.classes)
@@ -62,7 +62,7 @@ def build_continual_dataloader(args):
         args.nb_classes = 0
 
     for i in range(args.num_tasks):
-        if args.dataset.startswith('Split-') or args.dataset == 'CORe50':
+        if args.dataset.startswith('Split-') or args.dataset in ['CORe50', 'DomainNet']:
             dataset_train, dataset_val = splited_dataset[i]
 
         else:
@@ -148,6 +148,10 @@ def get_dataset(dataset, transform_train, transform_val, args,):
     elif dataset == 'CORe50':
         dataset_train = CORe50(args.data_path, train=True, download=True, transform=transform_train).data
         dataset_val = CORe50(args.data_path, train=False, download=True, transform=transform_val).data
+
+    elif dataset == 'DomainNet':
+        dataset_train = DomainNet(args.data_path, train=True, download=True, transform=transform_train).data
+        dataset_val = DomainNet(args.data_path, train=False, download=True, transform=transform_val).data
 
     else:
         raise ValueError('Dataset {} not found.'.format(dataset))
