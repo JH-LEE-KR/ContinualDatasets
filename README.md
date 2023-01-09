@@ -24,6 +24,7 @@ The available datasets are as follows:
 - TinyImagenet
 - Imagenet-R
 - CORe50
+- DomainNet
 
 ## Usage
 First, clone the repository locally:
@@ -93,6 +94,12 @@ python main.py --dataset IFAR100,CUB200,TinyImagenet,Scene67,Cars196,Flower102,I
 **Domain Incremental CORe50 with 7 tasks**
 ```
 python main.py --dataset CORe50 --num_tasks 7 --domain_inc
+```
+
+
+**Domain Incremental DomainNet with 6 tasks**
+```
+python main.py --dataset DomainNet --num_tasks 6 --domain_inc
 ```
 
 
