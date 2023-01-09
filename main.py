@@ -76,7 +76,7 @@ def get_args_parser():
         you can customize Split-{datasets}, as Split-TinyImagenet with 10 tasks, Split-CUB200 with 10 tasks.
     note: You must set below '--num_tasks' to correspond to dataset.
     '''
-    parser.add_argument('--shuffle', default=True, help='shuffle the data order')
+    parser.add_argument('--shuffle', action='store_true', default=False, help='shuffle the data order')
     parser.add_argument('--output_dir', default='./output', help='path where to save, empty for no saving')
     parser.add_argument('--device', default='cuda', help='device to use for training / testing')
     parser.add_argument('--seed', default=42, type=int)
@@ -90,8 +90,9 @@ def get_args_parser():
 
     # Continual learning parameters
     parser.add_argument('--num_tasks', default=10, type=int, help='number of sequential tasks')
-    parser.add_argument('--train_mask', default=True, type=bool, help='if using the class mask at training')
-    parser.add_argument('--task_inc', default=False, type=bool, help='if doing task incremental')
+    parser.add_argument('--train_mask', action='store_true', default=True, help='if using the class mask at training')
+    parser.add_argument('--no_train_mask', action='store_false', dest='train_mask', help='if domain incremental setting, not using the class mask at training')
+    parser.add_argument('--task_inc', action='store_true', default=False, help='if doing task incremental')
     parser.add_argument('--domain_inc', action='store_true', default=False, help='if doing domain incremental')
 
     # Misc parameters
@@ -102,7 +103,7 @@ def get_args_parser():
 
 def main(args):
     device = torch.device(args.device)
-
+    import pdb; pdb.set_trace()
     # fix the seed for reproducibility
     seed = args.seed
     torch.manual_seed(seed)

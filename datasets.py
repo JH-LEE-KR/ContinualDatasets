@@ -42,7 +42,7 @@ def build_continual_dataloader(args):
 
         splited_dataset, class_mask = split_single_dataset(dataset_train, dataset_val, args)
     
-    elif args.dataset in ['CORe50', 'DomainNet']:
+    elif args.dataset in ['CORe50', 'DomainNet'] and args.domain_inc:
         dataset_train, dataset_val = get_dataset(args.dataset, transform_train, transform_val, args)
 
         args.nb_classes = len(dataset_val.classes)
