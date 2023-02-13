@@ -113,7 +113,7 @@ def main(args):
     cudnn.benchmark = True
 
     data_loader, class_mask = build_continual_dataloader(args)
-    import pdb; pdb.set_trace()
+
     print(f"Creating model: {args.model}")
     model = timm.create_model(
         args.model,
