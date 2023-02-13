@@ -800,12 +800,12 @@ class DomainNet(torch.utils.data.Dataset):
         ]
 
         self.train_url_list = [
-            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/clipart_train.txt',
-            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/infograph_train.txt',
-            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/painting_train.txt',
-            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/quickdraw_train.txt',
-            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/real_train.txt',
-            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/sketch_train.txt'
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/groundtruth/txt/clipart_train.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/txt/infograph_train.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/groundtruth/txt/painting_train.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/txt/quickdraw_train.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/txt/real_train.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/txt/sketch_train.txt'
         ]
 
         for u in self.train_url_list:
@@ -818,12 +818,12 @@ class DomainNet(torch.utils.data.Dataset):
                     download_url(u, root, filename=filename)
         
         self.test_url_list = [
-            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/clipart_test.txt',
-            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/infograph_test.txt',
-            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/painting_test.txt',
-            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/quickdraw_test.txt',
-            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/real_test.txt',
-            'http://csr.bu.edu/ftp/visda/2019/multi-source/domainnet/txt/sketch_test.txt'
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/groundtruth/txt/clipart_test.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/txt/infograph_test.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/groundtruth/txt/painting_test.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/txt/quickdraw_test.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/txt/real_test.txt',
+            'http://csr.bu.edu/ftp/visda/2019/multi-source/txt/sketch_test.txt'
         ]
 
         for u in self.test_url_list:
@@ -844,7 +844,7 @@ class DomainNet(torch.utils.data.Dataset):
                 else:
                     print('Downloading from '+self.url[i])
                     download_url(self.url[i], root, filename=self.filename[i])
-            
+
         if not os.path.exists(self.root + '/train') and not os.path.exists(self.root + '/test'):
             for i in range(len(self.fpath)):
                 if not os.path.exists(os.path.join(self.root, self.filename[i][:-4])):
@@ -884,7 +884,7 @@ class DomainNet(torch.utils.data.Dataset):
                     
                     if not os.path.exists(os.path.join(train_folder, dst)):
                         os.makedirs(os.path.join(train_folder, dst))
-                    
+
                     src = os.path.join(self.root, path)
                     dst = os.path.join(train_folder, path)
 
