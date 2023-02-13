@@ -26,6 +26,10 @@ from torchvision.datasets.utils import download_url, check_integrity, verify_str
 import PIL
 from PIL import Image
 
+import tqdm
+import zipfile
+import tarfile
+
 from .dataset_utils import read_image_file, read_label_file
 
 class MNIST_RGB(datasets.MNIST):
@@ -141,11 +145,12 @@ class NotMNIST(MNIST_RGB):
                 download_url(self.url, root, filename=self.filename)
 
         if not os.path.exists(os.path.join(root, 'notMNIST')):
-            import zipfile
-            zip_ref = zipfile.ZipFile(fpath, 'r')
-            zip_ref.extractall(root)
-            zip_ref.close()
-
+            with zipfile.ZipFile(fpath, 'r') as zf:
+                for member in tqdm.tqdm(zf.infolist(), desc=f'Extracting {self.filename}'):
+                    try:
+                        zf.extract(member, root)
+                    except zipfile.error as e:
+                        pass
         if self.train:
             fpath = os.path.join(root, 'notMNIST', 'Train')
 
@@ -437,16 +442,19 @@ class CUB200(torch.utils.data.Dataset):
                 download_url(self.url, root, filename=self.filename)
 
         if not os.path.exists(os.path.join(root, 'CUB_200_2011')):
-            import zipfile
-            zip_ref = zipfile.ZipFile(fpath, 'r')
-            zip_ref.extractall(root)
-            zip_ref.close()
+            with zipfile.ZipFile(fpath, 'r') as zf:
+                for member in tqdm.tqdm(zf.infolist(), desc=f'Extracting {self.filename}'):
+                    try:
+                        zf.extract(member, root)
+                    except zipfile.error as e:
+                        pass
 
-            import tarfile
-            tar_ref = tarfile.open(os.path.join(root, 'CUB_200_2011.tgz'), 'r')
-            tar_ref.extractall(root)
-            tar_ref.close()
-
+            with tarfile.open(os.path.join(root, 'CUB_200_2011.tgz'), 'r') as tf:
+                for member in tqdm.tqdm(iterable=tf.getmembers(), total=len(tf.getmembers()), desc='Extracting CUB_200_2011.tgz'):
+                    try:
+                        tf.extract(member, root)
+                    except tarfile.error as e:
+                        pass
             self.split()
         
         if self.train:
@@ -473,7 +481,7 @@ class CUB200(torch.utils.data.Dataset):
 
         with open(images, 'r') as image:
             with open(train_test_split, 'r') as f:
-                for line in f:
+                for line in tqdm.tqdm(f, desc='Preprocessing'):
                     image_path = image.readline().split(' ')[-1]
                     image_path = image_path.replace('\n', '')
                     class_name = image_path.split('/')[0].split(' ')[-1]
@@ -509,11 +517,12 @@ class TinyImagenet(torch.utils.data.Dataset):
                 download_url(self.url, root, filename=self.filename)
         
         if not os.path.exists(os.path.join(root, 'tiny-imagenet-200')):
-            import zipfile
-            zip_ref = zipfile.ZipFile(fpath, 'r')
-            zip_ref.extractall(os.path.join(root))
-            zip_ref.close()
-
+            with zipfile.ZipFile(fpath, 'r') as zf:
+                for member in tqdm.tqdm(zf.infolist(), desc=f'Extracting {self.filename}'):
+                    try:
+                        zf.extract(member, root)
+                    except zipfile.error as e:
+                        pass
             self.split()
 
         if self.train:
@@ -548,7 +557,7 @@ class TinyImagenet(torch.utils.data.Dataset):
                 os.mkdir(test_folder + '/' + folder + '/images')
             
             
-        for path in paths:
+        for path in tqdm.tqdm(paths, desc='Preprocessing'):
             if '\\' in path:
                 path = path.replace('\\', '/')
             file = path.split('/')[-1]
@@ -584,10 +593,12 @@ class Scene67(torch.utils.data.Dataset):
                     print('Downloading from ' + url)
                     download_url(url, root, filename=fname)
         if not os.path.exists(os.path.join(root, 'Scene67')):
-            import tarfile
-            with tarfile.open(os.path.join(root, image_fname)) as tar:
-                tar.extractall(os.path.join(root, 'Scene67'))
-
+            with tarfile.open(os.path.join(root, image_fname), 'r') as tf:
+                for member in tqdm.tqdm(iterable=tf.getmembers(), total=len(tf.getmembers()), desc=f'Extracting {image_fname}'):
+                    try:
+                        tf.extract(member, os.path.join(root, 'Scene67'))
+                    except tarfile.error as e:
+                        pass
             self.split()
 
         if self.train:
@@ -608,7 +619,7 @@ class Scene67(torch.utils.data.Dataset):
         test_annos_file = os.path.join(self.root, self.test_annos_fname)
 
         with open(train_annos_file, 'r') as f:
-            for line in f.readlines():
+            for line in tqdm.tqdm(f.readlines(), desc='Preprocessing'):
                 line = line.replace('\n', '')
                 src = self.root + 'Scene67/' + 'Images/' + line
                 dst = self.root + 'Scene67/' + 'train/' + line
@@ -617,7 +628,7 @@ class Scene67(torch.utils.data.Dataset):
                 move(src, dst)
         
         with open(test_annos_file, 'r') as f:
-            for line in f.readlines():
+            for line in tqdm.tqdm(f.readlines(), desc='Preprocessing'):
                 line = line.replace('\n', '')
                 src = self.root + 'Scene67/' + 'Images/' + line
                 dst = self.root + 'Scene67/' + 'test/' + line
@@ -644,11 +655,12 @@ class Imagenet_R(torch.utils.data.Dataset):
                 download_url(self.url, root, filename=self.filename)
 
         if not os.path.exists(os.path.join(root, 'imagenet-r')):
-            import tarfile
-            tar_ref = tarfile.open(os.path.join(root, self.filename), 'r')
-            tar_ref.extractall(root)
-            tar_ref.close()
-        
+            with tarfile.open(os.path.join(self.root, self.filename), 'r') as tf:
+                for member in tqdm.tqdm(iterable=tf.getmembers(), total=len(tf.getmembers()), desc=f'Extracting {self.filename}'):
+                    try:
+                        tf.extract(member, root)
+                    except tarfile.error as e:
+                        pass
         if not os.path.exists(self.fpath + '/train') and not os.path.exists(self.fpath + '/test'):
             self.dataset = datasets.ImageFolder(self.fpath, transform=transform)
             
@@ -688,14 +700,14 @@ class Imagenet_R(torch.utils.data.Dataset):
             if not os.path.exists(os.path.join(test_folder, c)):
                 os.mkdir(os.path.join(os.path.join(test_folder, c)))
         
-        for path in self.train_file_list:
+        for path in tqdm.tqdm(self.train_file_list, desc='Preprocessing'):
             if '\\' in path:
                 path = path.replace('\\', '/')
             src = path
             dst = os.path.join(train_folder, '/'.join(path.split('/')[-2:]))
             move(src, dst)
 
-        for path in self.test_file_list:
+        for path in tqdm.tqdm(self.test_file_list, desc='Preprocessing'):
             if '\\' in path:
                 path = path.replace('\\', '/')
             src = path
@@ -725,11 +737,13 @@ class CORe50(torch.utils.data.Dataset):
                 download_url(self.url, root, filename=self.filename)
 
         if not os.path.exists(os.path.join(root, 'core50_128x128')):
-            import zipfile
-            zip_ref = zipfile.ZipFile(os.path.join(self.root, self.filename), 'r')
-            zip_ref.extractall(root)
-            zip_ref.close()
-            
+            with zipfile.ZipFile(os.path.join(self.root, self.filename), 'r') as zf:
+                for member in tqdm.tqdm(zf.infolist(), desc=f'Extracting {self.filename}'):
+                    try:
+                        zf.extract(member, root)
+                    except zipfile.error as e:
+                        pass
+
         self.train_session_list = ['s1', 's2', 's4', 's5', 's6', 's8', 's9', 's11']
         self.test_session_list = ['s3', 's7', 's10']
         self.label = [f'o{i}' for i in range(1, 51)]
@@ -755,13 +769,13 @@ class CORe50(torch.utils.data.Dataset):
         os.mkdir(train_folder)
         os.mkdir(test_folder)
 
-        for s in self.train_session_list:
+        for s in tqdm.tqdm(self.train_session_list, desc='Preprocessing'):
             src = os.path.join(self.fpath, s)
             if os.path.exists(os.path.join(train_folder, s)):
                 continue
             move(src, train_folder)
         
-        for s in self.test_session_list:
+        for s in tqdm.tqdm(self.test_session_list, desc='Preprocessing'):
             for l in self.label:
                 dst = os.path.join(test_folder, l)
                 if not os.path.exists(dst):
@@ -848,10 +862,12 @@ class DomainNet(torch.utils.data.Dataset):
         if not os.path.exists(self.root + '/train') and not os.path.exists(self.root + '/test'):
             for i in range(len(self.fpath)):
                 if not os.path.exists(os.path.join(self.root, self.filename[i][:-4])):
-                    import zipfile
-                    zip_ref = zipfile.ZipFile(os.path.join(self.root, self.filename[i]), 'r')
-                    zip_ref.extractall(root)
-                    zip_ref.close()
+                    with zipfile.ZipFile(os.path.join(self.root, self.filename[i]), 'r') as zf:
+                        for member in tqdm.tqdm(zf.infolist(), desc=f'Extracting {self.filename[i]}'):
+                            try:
+                                zf.extract(member, root)
+                            except zipfile.error as e:
+                                pass
             
             self.split()
 
@@ -873,7 +889,7 @@ class DomainNet(torch.utils.data.Dataset):
         os.mkdir(train_folder)
         os.mkdir(test_folder)
 
-        for i in range(len(self.train_url_list)):
+        for i in tqdm.tqdm(range(len(self.train_url_list)), desc='Preprocessing'):
             train_list = self.train_url_list[i].split('/')[-1]
             
             with open(os.path.join(self.root, train_list), 'r') as f:
@@ -890,7 +906,7 @@ class DomainNet(torch.utils.data.Dataset):
 
                     move(src, dst)
         
-        for i in range(len(self.test_url_list)):
+        for i in tqdm.tqdm(range(len(self.test_url_list)), desc='Preprocessing'):
             test_list = self.test_url_list[i].split('/')[-1]
 
             with open(os.path.join(self.root, test_list), 'r') as f:
