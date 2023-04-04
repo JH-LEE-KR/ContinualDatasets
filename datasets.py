@@ -35,29 +35,25 @@ def build_continual_dataloader(args):
     transform_train = build_transform(True, args)
     transform_val = build_transform(False, args)
 
-    if args.dataset.startswith('Split-') or args.dataset == 'PermutedMNIST':
-        if args.dataset.startswith('Split-'):
-            dataset = args.dataset.replace('Split-','')
-        else:
-            dataset = args.dataset
+    # Case: Configure tasks with single dataset
+    if args.dataset.startswith('Split-'):
+        dataset_train, dataset_val = get_dataset(args.dataset.replace('Split-',''), transform_train, transform_val, args)
 
-        dataset_train, dataset_val = get_dataset(dataset, transform_train, transform_val, args)
+        splited_dataset, class_mask = split_single_dataset(dataset_train, dataset_val, args)
+        args.nb_classes = len(dataset_val.classes)
 
-        if args.dataset.startswith('Split-'):
-            splited_dataset, class_mask = split_single_dataset(dataset_train, dataset_val, args)
+    # Case: Configure domain incremental learning tasks with single dataset
+    elif args.dataset in ['CORe50', 'DomainNet', 'PermutedMNIST'] and args.domain_inc:
+        dataset_train, dataset_val = get_dataset(args.dataset, transform_train, transform_val, args)
+
+        if args.dataset in ['CORe50', 'DomainNet']:
+            splited_dataset = [(dataset_train[i], dataset_val) for i in range(len(dataset_train))]
             args.nb_classes = len(dataset_val.classes)
         else:
             splited_dataset = [(dataset_train[i], dataset_val[i]) for i in range(len(dataset_train))]
             args.nb_classes = len(dataset_train[0].classes)
-            class_mask = [list(range(args.nb_classes)) for _ in range(len(dataset_train))]
-        
-    elif args.dataset in ['CORe50', 'DomainNet'] and args.domain_inc:
-        dataset_train, dataset_val = get_dataset(args.dataset, transform_train, transform_val, args)
 
-        args.nb_classes = len(dataset_val.classes)
-
-        splited_dataset = [(dataset_train[i], dataset_val) for i in range(len(dataset_train))]
-
+    # Case: Configure tasks with multiple datasets
     else:
         if args.dataset == '5-datasets':
             dataset_list = ['CIFAR10', 'MNIST', 'FashionMNIST', 'SVHN', 'NotMNIST']
