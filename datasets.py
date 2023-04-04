@@ -35,13 +35,22 @@ def build_continual_dataloader(args):
     transform_train = build_transform(True, args)
     transform_val = build_transform(False, args)
 
-    if args.dataset.startswith('Split-'):
-        dataset_train, dataset_val = get_dataset(args.dataset.replace('Split-',''), transform_train, transform_val, args)
+    if args.dataset.startswith('Split-') or args.dataset == 'PermutedMNIST':
+        if args.dataset.startswith('Split-'):
+            dataset = args.dataset.replace('Split-','')
+        else:
+            dataset = args.dataset
 
-        args.nb_classes = len(dataset_val.classes)
+        dataset_train, dataset_val = get_dataset(dataset, transform_train, transform_val, args)
 
-        splited_dataset, class_mask = split_single_dataset(dataset_train, dataset_val, args)
-    
+        if args.dataset.startswith('Split-'):
+            splited_dataset, class_mask = split_single_dataset(dataset_train, dataset_val, args)
+            args.nb_classes = len(dataset_val.classes)
+        else:
+            splited_dataset = [(dataset_train[i], dataset_val[i]) for i in range(len(dataset_train))]
+            args.nb_classes = len(dataset_train[0].classes)
+            class_mask = [list(range(args.nb_classes)) for _ in range(len(dataset_train))]
+        
     elif args.dataset in ['CORe50', 'DomainNet'] and args.domain_inc:
         dataset_train, dataset_val = get_dataset(args.dataset, transform_train, transform_val, args)
 
@@ -52,6 +61,10 @@ def build_continual_dataloader(args):
     else:
         if args.dataset == '5-datasets':
             dataset_list = ['CIFAR10', 'MNIST', 'FashionMNIST', 'SVHN', 'NotMNIST']
+
+        elif args.dataset == 'iDigit':
+            dataset_list = ['MNIST', 'SVHN', 'MNISTM', 'SynDigit']
+
         else:
             dataset_list = args.dataset.split(',')
         
@@ -62,7 +75,7 @@ def build_continual_dataloader(args):
         args.nb_classes = 0
 
     for i in range(args.num_tasks):
-        if args.dataset.startswith('Split-') or args.dataset in ['CORe50', 'DomainNet']:
+        if args.dataset.startswith('Split-') or args.dataset in ['CORe50', 'DomainNet', 'iDigit', 'PermutedMNIST']:
             dataset_train, dataset_val = splited_dataset[i]
 
         else:
@@ -152,6 +165,18 @@ def get_dataset(dataset, transform_train, transform_val, args,):
     elif dataset == 'DomainNet':
         dataset_train = DomainNet(args.data_path, train=True, download=True, transform=transform_train).data
         dataset_val = DomainNet(args.data_path, train=False, download=True, transform=transform_val).data
+
+    elif dataset == 'MNISTM':
+        dataset_train = MNISTM(args.data_path, train=True, download=True, transform=transform_train)
+        dataset_val = MNISTM(args.data_path, train=False, download=True, transform=transform_val)
+
+    elif dataset == 'SynDigit':
+        dataset_train = SynDigit(args.data_path, train=True, download=True, transform=transform_train)
+        dataset_val = SynDigit(args.data_path, train=False, download=True, transform=transform_val)
+
+    elif dataset == 'PermutedMNIST':
+        dataset_train = [PermutedMNIST(args.data_path, train=True, download=True, transform=transform_train, random_seed=i) for i in range(args.num_tasks)]
+        dataset_val = [PermutedMNIST(args.data_path, train=False, download=True, transform=transform_val, random_seed=i) for i in range(args.num_tasks)]
 
     else:
         raise ValueError('Dataset {} not found.'.format(dataset))
