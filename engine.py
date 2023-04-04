@@ -120,7 +120,7 @@ def evaluate_till_now(model: torch.nn.Module, data_loader, device, task_id=-1, c
 
     count = 0
     for i in range(task_id+1):
-        test_stats = evaluate(model=model,data_loader=data_loader[i]['val'], device=device, task_id=i if not args.domain_inc else task_id, class_mask=class_mask, args=args)
+        test_stats = evaluate(model=model,data_loader=data_loader[i]['val'], device=device, task_id=i, class_mask=class_mask, args=args)
 
         stat_matrix[0, i] = test_stats['Acc@1']
         stat_matrix[1, i] = test_stats['Acc@5']
@@ -129,9 +129,6 @@ def evaluate_till_now(model: torch.nn.Module, data_loader, device, task_id=-1, c
         acc_matrix[i, task_id] = test_stats['Acc@1']
 
         count +=1 
-
-        if args.domain_inc:
-            break
     
     avg_stat = np.divide(np.sum(stat_matrix, axis=1), count)
 

@@ -58,7 +58,7 @@ def build_continual_dataloader(args):
         if args.dataset == '5-datasets':
             dataset_list = ['CIFAR10', 'MNIST', 'FashionMNIST', 'SVHN', 'NotMNIST']
 
-        elif args.dataset == 'iDigit':
+        elif args.dataset == 'iDigits':
             dataset_list = ['MNIST', 'SVHN', 'MNISTM', 'SynDigit']
 
         else:
@@ -71,19 +71,17 @@ def build_continual_dataloader(args):
         args.nb_classes = 0
 
     for i in range(args.num_tasks):
-        if args.dataset.startswith('Split-') or args.dataset in ['CORe50', 'DomainNet', 'iDigit', 'PermutedMNIST']:
+        if args.dataset.startswith('Split-') or args.dataset in ['CORe50', 'DomainNet', 'PermutedMNIST']:
             dataset_train, dataset_val = splited_dataset[i]
-
         else:
             dataset_train, dataset_val = get_dataset(dataset_list[i], transform_train, transform_val, args)
-
-            transform_target = Lambda(target_transform, args.nb_classes)
 
             if class_mask is not None:
                 class_mask.append([i + args.nb_classes for i in range(len(dataset_val.classes))])
                 args.nb_classes += len(dataset_val.classes)
 
-            if not args.task_inc:
+            if not args.domain_inc:
+                transform_target = Lambda(target_transform, args.nb_classes)
                 dataset_train.target_transform = transform_target
                 dataset_val.target_transform = transform_target
         

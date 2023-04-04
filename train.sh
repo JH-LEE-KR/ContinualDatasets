@@ -1,16 +1,16 @@
 #!/bin/bash
 
-#SBATCH --job-name=simple_cl
+#SBATCH --job-name=pm
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:1
-#SBATCH -p batch
-#SBATCH -w agi1
+#SBATCH -p batch_grad
+#SBATCH -w ariel-g4
 #SBATCH --cpus-per-gpu=4
 #SBATCH --mem-per-gpu=20G
-#SBATCH --time=8:00:00
-#SBATCH -o %x_%j.out
-#SBTACH -e %x_%j.err
+#SBATCH --time=2-0
+#SBATCH -o %N_%x_%j.out
+#SBTACH -e %N_%x_%j.err
 
-source /data/jaeho/init.sh
+source /data/dlwogh9344/init.sh
 conda activate torch38gpu
-python main.py
+python main.py --dataset iDigits --num_tasks 4 --domain_inc --no_train_mask --epochs 1
