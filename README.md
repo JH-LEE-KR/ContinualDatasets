@@ -24,9 +24,14 @@ The available datasets are as follows:
 - Indoor Scene67
 - TinyImagenet
 - Imagenet-R
+- MNISTM
+- Synthetic Digit
+
 ### Domain Incremental
 - CORe50
 - DomainNet
+- PermutedMNIST
+- iDigits (MNIST, SVHN, MNISTM, SynDigit)
 
 ## Usage
 First, clone the repository locally:
@@ -102,6 +107,15 @@ python main.py --dataset CORe50 --num_tasks 7 --domain_inc --no_train_mask
 **Domain Incremental DomainNet with 6 tasks**
 ```
 python main.py --dataset DomainNet --num_tasks 6 --domain_inc --no_train_mask
+```
+
+**Domain Incremental PermutedMNIST with 6 tasks**
+```
+python main.py --dataset PermutedMNIST --num_tasks 6 --domain_inc --no_train_mask
+```
+**Domain Incremental iDigits with 4 tasks**
+```
+python main.py --dataset iDigits --num_tasks 4 --domain_inc --no_train_mask
 ```
 
 **Options**
