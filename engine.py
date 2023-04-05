@@ -94,9 +94,10 @@ def evaluate(model: torch.nn.Module, data_loader, device, task_id=-1, class_mask
             if args.task_inc and class_mask is not None:
                 #adding mask to output logits
                 mask = class_mask[task_id]
-                logits_mask = torch.ones_like(output, device=device) * float('-inf')
+                mask = torch.tensor(mask, dtype=torch.int64).to(device)
+                logits_mask = torch.ones_like(logits, device=device) * float('-inf')
                 logits_mask = logits_mask.index_fill(1, mask, 0.0)
-                output = output + logits_mask
+                logits = logits + logits_mask
 
             loss = criterion(output, target)
 
