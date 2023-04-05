@@ -31,7 +31,7 @@ The available datasets are as follows:
 - CORe50
 - DomainNet
 - PermutedMNIST
-- iDigits (MNIST, SVHN, MNISTM, SynDigit)
+- iDigits (MNIST, SVHN, MNISTM, Synthetic Digit)
 
 ## Usage
 First, clone the repository locally:
