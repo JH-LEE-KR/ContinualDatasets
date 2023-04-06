@@ -65,18 +65,8 @@ def get_args_parser():
     # Data parameters
     parser.add_argument('--data-path', default='/local_datasets/', type=str, help='dataset path')
     parser.add_argument('--dataset', default='Split-CIFAR100', type=str, help='dataset name')
-    '''
-    default: "Split-CIFAR100"), 
-    options:
-        "Split-CIFAR100" with 10 tasks,
-        "Split-Imagenet-R" with 10 tasks,
-        "Split-CUB200" with 10 tasks,
-        "5-datasets" 5 tasks with MNIST, Fashion-MNIST, NotMNIST, CIFAR10, SVHN,
-        "Sequence of datasets (CUB200,TinyImagenet,Scene67,Cars196,Flower102) with 5 tasks",
-        you can customize Split-{datasets}, as Split-TinyImagenet with 10 tasks, Split-CUB200 with 10 tasks.
-    note: You must set below '--num_tasks' to correspond to dataset.
-    '''
     parser.add_argument('--shuffle', action='store_true', default=False, help='shuffle the data order')
+    parser.add_argument('--label_shuffle', action='store_true', default=False, help='shuffle the label order when split the single dataset')
     parser.add_argument('--output_dir', default='./output', help='path where to save, empty for no saving')
     parser.add_argument('--device', default='cuda', help='device to use for training / testing')
     parser.add_argument('--seed', default=42, type=int)

@@ -13,8 +13,6 @@ import torch
 from torch.utils.data.dataset import Subset
 from torchvision import datasets, transforms
 
-from timm.data import create_transform
-
 from continual_datasets.continual_datasets import *
 
 class Lambda(transforms.Lambda):
@@ -35,56 +33,73 @@ def build_continual_dataloader(args):
     transform_train = build_transform(True, args)
     transform_val = build_transform(False, args)
 
-    # Case: Configure tasks with single dataset
-    if args.dataset.startswith('Split-'):
-        dataset_train, dataset_val = get_dataset(args.dataset.replace('Split-',''), transform_train, transform_val, args)
+    if args.dataset == '5-datasets':
+        dataset_list = ['CIFAR10', 'MNIST', 'FashionMNIST', 'SVHN', 'NotMNIST']
 
-        splited_dataset, class_mask = split_single_dataset(dataset_train, dataset_val, args)
-        args.nb_classes = len(dataset_val.classes)
+    elif args.dataset == 'iDigits':
+        dataset_list = ['MNIST', 'SVHN', 'MNISTM', 'SynDigit']
 
-    # Case: Configure domain incremental learning tasks with single dataset
-    elif args.dataset in ['CORe50', 'DomainNet', 'PermutedMNIST'] and args.domain_inc:
-        dataset_train, dataset_val = get_dataset(args.dataset, transform_train, transform_val, args)
-
-        if args.dataset in ['CORe50', 'DomainNet']:
-            splited_dataset = [(dataset_train[i], dataset_val) for i in range(len(dataset_train))]
-            args.nb_classes = len(dataset_val.classes)
-        else:
-            splited_dataset = [(dataset_train[i], dataset_val[i]) for i in range(len(dataset_train))]
-            args.nb_classes = len(dataset_train[0].classes)
-
-    # Case: Configure tasks with multiple datasets
     else:
-        if args.dataset == '5-datasets':
-            dataset_list = ['CIFAR10', 'MNIST', 'FashionMNIST', 'SVHN', 'NotMNIST']
+        dataset_list = args.dataset.split(',')
 
-        elif args.dataset == 'iDigits':
-            dataset_list = ['MNIST', 'SVHN', 'MNISTM', 'SynDigit']
+    splited_dataset = list()
+    args.nb_classes = 0
 
-        else:
-            dataset_list = args.dataset.split(',')
-        
-        if args.shuffle:
-            random.shuffle(dataset_list)
-        print(dataset_list)
-    
-        args.nb_classes = 0
+    for i, dataset in enumerate(dataset_list):
+        dataset_train, dataset_val = get_dataset(
+            dataset=dataset if not dataset.startswith('Split-') else dataset.replace('Split-',''),
+            transform_train=transform_train,
+            transform_val=transform_val,
+            args=args,
+        )
 
-    for i in range(args.num_tasks):
-        if args.dataset.startswith('Split-') or args.dataset in ['CORe50', 'DomainNet', 'PermutedMNIST']:
-            dataset_train, dataset_val = splited_dataset[i]
-        else:
-            dataset_train, dataset_val = get_dataset(dataset_list[i], transform_train, transform_val, args)
+        if args.dataset.startswith('Split-') and len(dataset_list) == 1:
+            args.nb_classes = len(dataset_train.classes)
+
+            splited_dataset, mask = split_single_dataset(dataset_train, dataset_val, args)
+
+            splited_dataset.append((dataset_train, dataset_val))
 
             if class_mask is not None:
-                class_mask.append([i + args.nb_classes for i in range(len(dataset_val.classes))])
-                args.nb_classes += len(dataset_val.classes)
-
+                class_mask = mask
+        else:
             if not args.domain_inc:
                 transform_target = Lambda(target_transform, args.nb_classes)
                 dataset_train.target_transform = transform_target
                 dataset_val.target_transform = transform_target
-        
+            
+            if args.domain_inc:
+                if args.dataset == 'CORe50':
+                    splited_dataset = [(dataset_train[i], dataset_val) for i in range(len(dataset_train))]
+                elif args.dataset == 'iDigits':
+                    splited_dataset.append((dataset_train, dataset_val))
+                else:
+                    splited_dataset = [(dataset_train[i], dataset_val[i]) for i in range(len(dataset_val))]
+            else:
+                splited_dataset.append((dataset_train, dataset_val))
+            
+            # DIL setting should not use class mask, because of assumption the number of classes is the same for all tasks
+            if class_mask is not None:
+                class_mask.append([i + args.nb_classes for i in range(len(dataset_val.classes))])
+
+        if args.domain_inc and args.dataset in ['CORe50', 'DomainNet', 'PermutedMNIST', 'iDigits']:
+            # DIL setting assume that the number of classes are the same for all tasks
+            # So, we should not add the number of classes for each task
+            # Just add one for val set of the first task
+            args.nb_classes = len(splited_dataset[0][1].classes)
+        elif not args.dataset.startswith('Split-'):
+            args.nb_classes += len(splited_dataset[i][1].classes)
+        else:
+            pass
+
+    if args.shuffle:
+        zipped = list(zip(splited_dataset, class_mask))
+        random.shuffle(zipped)
+        splited_dataset, class_mask = zip(*zipped)
+
+    for i in range(args.num_tasks):
+        dataset_train, dataset_val = splited_dataset[i]
+
         data_loader_train = torch.utils.data.DataLoader(
             dataset_train, shuffle=True,
             batch_size=args.batch_size,
@@ -187,7 +202,7 @@ def split_single_dataset(dataset_train, dataset_val, args):
     split_datasets = list()
     mask = list()
 
-    if args.shuffle:
+    if args.label_shuffle:
         random.shuffle(labels)
 
     for _ in range(args.num_tasks):

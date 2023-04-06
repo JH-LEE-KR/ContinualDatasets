@@ -94,7 +94,7 @@ python main.py --dataset Split-CUB200 --num_tasks 10
 
 **Sequence of datasets (CIFAR100,CUB200,TinyImagenet,Scene67,Cars196,Flower102,Imagenet-R) with 7 tasks**
 ```
-python main.py --dataset IFAR100,CUB200,TinyImagenet,Scene67,Cars196,Flower102,Imagenet-R --num_tasks 7
+python main.py --dataset CIFAR100,CUB200,TinyImagenet,Scene67,Cars196,Flower102,Imagenet-R --num_tasks 7
 ```
 
 

@@ -680,7 +680,7 @@ class CUB200(torch.utils.data.Dataset):
                 for member in tqdm.tqdm(iterable=tf.getmembers(), total=len(tf.getmembers()), desc='Extracting CUB_200_2011.tgz'):
                     try:
                         tf.extract(member, root)
-                    except tarfile.error as e:
+                    except tarfile.TarError as e:
                         pass
             self.split()
         
@@ -824,7 +824,7 @@ class Scene67(torch.utils.data.Dataset):
                 for member in tqdm.tqdm(iterable=tf.getmembers(), total=len(tf.getmembers()), desc=f'Extracting {image_fname}'):
                     try:
                         tf.extract(member, os.path.join(root, 'Scene67'))
-                    except tarfile.error as e:
+                    except tarfile.TarError as e:
                         pass
             self.split()
 
@@ -886,7 +886,7 @@ class Imagenet_R(torch.utils.data.Dataset):
                 for member in tqdm.tqdm(iterable=tf.getmembers(), total=len(tf.getmembers()), desc=f'Extracting {self.filename}'):
                     try:
                         tf.extract(member, root)
-                    except tarfile.error as e:
+                    except tarfile.TarError as e:
                         pass
         if not os.path.exists(self.fpath + '/train') and not os.path.exists(self.fpath + '/test'):
             self.dataset = datasets.ImageFolder(self.fpath, transform=transform)
@@ -1103,7 +1103,7 @@ class DomainNet(torch.utils.data.Dataset):
             self.data = [datasets.ImageFolder(f'{fpath}/{d}', transform=transform) for d in os.listdir(fpath)]
         else:
             fpath = self.root + '/test'
-            self.data = datasets.ImageFolder(fpath, transform=transform)
+            self.data = [datasets.ImageFolder(f'{fpath}/{d}', transform=transform) for d in os.listdir(fpath)]
 
     def split(self):
         train_folder = self.root + '/train'
@@ -1140,14 +1140,13 @@ class DomainNet(torch.utils.data.Dataset):
                 for line in f.readlines():
                     line = line.replace('\n', '')
                     path, _ = line.split(' ')
-                    dst = path.split('/')[1]
+                    dst = '/'.join(path.split('/')[:2])
 
                     if not os.path.exists(os.path.join(test_folder, dst)):
                         os.makedirs(os.path.join(test_folder, dst))
 
                     src = os.path.join(self.root, path)
-                    dst = '/'.join(path.split('/')[1:])
-                    dst = os.path.join(test_folder, dst)
+                    dst = os.path.join(test_folder, path)
 
                     move(src, dst)
             rmtree(os.path.join(self.root, test_list.split('_')[0]))
