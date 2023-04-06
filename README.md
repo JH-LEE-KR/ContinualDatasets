@@ -125,6 +125,7 @@ python main.py --dataset iDigits --num_tasks 4 --domain_inc --no_train_mask
 --task_inc, if doing task incremental.
 --domain_inc, if doing domain incremental.
 --shuffle, shuffle the data order.
+--label_shuffle, shuffle the label order when split the single dataset.
 ```
 
 Also available in <a href="https://slurm.schedmd.com/documentation.html">Slurm</a> by changing options on `train.sh`
