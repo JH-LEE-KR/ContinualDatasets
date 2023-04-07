@@ -93,9 +93,12 @@ def build_continual_dataloader(args):
             pass
 
     if args.shuffle:
-        zipped = list(zip(splited_dataset, class_mask))
-        random.shuffle(zipped)
-        splited_dataset, class_mask = zip(*zipped)
+        if class_mask is not None:
+            zipped = list(zip(splited_dataset, class_mask))
+            random.shuffle(zipped)
+            splited_dataset, class_mask = zip(*zipped)
+        else:
+            random.shuffle(splited_dataset)
 
     for i in range(args.num_tasks):
         dataset_train, dataset_val = splited_dataset[i]
